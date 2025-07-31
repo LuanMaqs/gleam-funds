@@ -29,6 +29,7 @@ const Index = () => {
   const [descricaoDespesa, setDescricaoDespesa] = useState('');
   const [tipoEconomias, setTipoEconomias] = useState<'adicionar' | 'retirar'>('adicionar');
   const [tipoSaldo, setTipoSaldo] = useState<'adicionar' | 'retirar'>('adicionar');
+  const [tipoDespesa, setTipoDespesa] = useState<'adicionar' | 'retirar'>('adicionar');
   const navigate = useNavigate();
 
   // Dados para o gráfico
@@ -50,15 +51,17 @@ const Index = () => {
   };
 
   // Função para salvar dados no localStorage
-  const salvarDadosLocal = (novoSaldo: number, novasDespesas: number, novasEconomias: number, novaMeta: number) => {
+  const salvarDadosLocal = (novoSaldo: number, novasDespesas: number, novasEconomias: number, novaMeta: number, novasMovimentacoes?: any[]) => {
     const dados = {
       saldo: novoSaldo,
       despesas: novasDespesas,
       economias: novasEconomias,
       metaEconomias: novaMeta,
+      movimentacoes: novasMovimentacoes || movimentacoes,
       timestamp: Date.now()
     };
     localStorage.setItem('mywallet_dados', JSON.stringify(dados));
+    console.log('Dados salvos no localStorage:', dados);
   };
 
   // Função para carregar dados do localStorage
@@ -70,14 +73,28 @@ const Index = () => {
         // Verificar se os dados não são muito antigos (mais de 30 dias)
         const trintaDias = 30 * 24 * 60 * 60 * 1000;
         if (Date.now() - dados.timestamp < trintaDias) {
+          console.log('Carregando dados do localStorage:', dados);
           setSaldo(dados.saldo || 2450);
           setDespesas(dados.despesas || 750);
           setEconomias(dados.economias || 1500);
           setMetaEconomias(dados.metaEconomias || 2000);
+          
+          // Carregar movimentações se existirem
+          if (dados.movimentacoes && Array.isArray(dados.movimentacoes)) {
+            // Converter as datas de string para Date
+            const movimentacoesComDatas = dados.movimentacoes.map((mov: any) => ({
+              ...mov,
+              data: new Date(mov.data)
+            }));
+            setMovimentacoes(movimentacoesComDatas);
+            console.log('Movimentações carregadas do localStorage:', movimentacoesComDatas);
+          }
         }
       } catch (error) {
         console.error('Erro ao carregar dados do localStorage:', error);
       }
+    } else {
+      console.log('Nenhum dado encontrado no localStorage');
     }
   };
 
@@ -99,9 +116,11 @@ const Index = () => {
       }
 
       if (transacoes && transacoes.length > 0) {
-        let saldoCalculado = 2450;
-        let despesasCalculadas = 750;
-        let economiasCalculadas = 1500;
+        // Usar os valores atuais como base
+        let saldoCalculado = saldo;
+        let despesasCalculadas = despesas;
+        let economiasCalculadas = economias;
+        
         const movimentacoesBanco: any[] = [];
 
         transacoes.forEach((transacao) => {
@@ -117,6 +136,8 @@ const Index = () => {
           } else if (transacao.tipo === 'Despesa') {
             if (observacao.includes('Despesa registrada')) {
               despesasCalculadas += valor;
+            } else if (observacao.includes('Retirada de despesa')) {
+              despesasCalculadas -= valor;
             } else if (observacao.includes('Retirada de economias')) {
               economiasCalculadas -= valor;
             } else if (observacao.includes('Retirada de saldo')) {
@@ -130,20 +151,27 @@ const Index = () => {
             tipo: observacao.includes('Adição de saldo') ? 'adicionar' :
                   observacao.includes('Retirada de saldo') ? 'retirar-saldo' :
                   observacao.includes('Adição de economias') ? 'economias' :
-                  observacao.includes('Retirada de economias') ? 'retirar-economias' : 'despesa',
+                  observacao.includes('Retirada de economias') ? 'retirar-economias' :
+                  observacao.includes('Retirada de despesa') ? 'retirar-despesa' :
+                  'despesa',
             valor: valor,
             data: new Date(transacao.data),
             descricao: observacao
           });
         });
 
-        setSaldo(saldoCalculado);
-        setDespesas(despesasCalculadas);
-        setEconomias(economiasCalculadas);
-        setMovimentacoes(movimentacoesBanco);
-
-        // Salvar no localStorage
-        salvarDadosLocal(saldoCalculado, despesasCalculadas, economiasCalculadas, metaEconomias);
+        // Só atualizar se os valores calculados forem diferentes dos atuais
+        if (saldoCalculado !== saldo || despesasCalculadas !== despesas || economiasCalculadas !== economias) {
+          setSaldo(saldoCalculado);
+          setDespesas(despesasCalculadas);
+          setEconomias(economiasCalculadas);
+          // Salvar no localStorage
+          salvarDadosLocal(saldoCalculado, despesasCalculadas, economiasCalculadas, metaEconomias, movimentacoesBanco);
+        } else {
+          // Mesmo que os valores não mudem, atualizar as movimentações
+          setMovimentacoes(movimentacoesBanco);
+          salvarDadosLocal(saldo, despesas, economias, metaEconomias, movimentacoesBanco);
+        }
       }
     } catch (error) {
       console.error('Erro ao carregar dados do banco:', error);
@@ -170,7 +198,10 @@ const Index = () => {
   useEffect(() => {
     if (user) {
       carregarDadosLocal(); // Primeiro carrega do localStorage para feedback rápido
-      carregarDadosBanco(); // Depois carrega do banco para sincronizar
+      // Aguardar um pouco antes de carregar do banco para evitar conflitos
+      setTimeout(() => {
+        carregarDadosBanco(); // Depois carrega do banco para sincronizar
+      }, 100);
     }
   }, [user]);
 
@@ -227,7 +258,7 @@ const Index = () => {
       setMovimentacoes(prev => [...prev, novaMovimentacao]);
 
       // Salvar no localStorage
-      salvarDadosLocal(novoSaldo, despesas, economias, metaEconomias);
+      salvarDadosLocal(novoSaldo, despesas, economias, metaEconomias, [...movimentacoes, novaMovimentacao]);
 
       // Tentar salvar no banco de dados
       const { error } = await supabase
@@ -276,22 +307,32 @@ const Index = () => {
     }
 
     const valor = parseFloat(valorDespesa);
-    const novaDespesa = despesas + valor;
+    
+    if (tipoDespesa === 'retirar' && valor > despesas) {
+      toast({
+        title: "Valor insuficiente",
+        description: "Você não tem despesas suficientes para retirar este valor.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const novaDespesa = tipoDespesa === 'adicionar' ? despesas + valor : despesas - valor;
     
     try {
       // Atualizar o estado primeiro para feedback imediato
       setDespesas(novaDespesa);
       const novaMovimentacao = {
         id: Date.now(),
-        tipo: 'despesa',
+        tipo: tipoDespesa === 'adicionar' ? 'despesa' : 'retirar-despesa',
         valor: valor,
         data: new Date(),
-        descricao: descricaoDespesa || 'Despesa registrada'
+        descricao: tipoDespesa === 'adicionar' ? (descricaoDespesa || 'Despesa registrada') : (descricaoDespesa || 'Retirada de despesa')
       };
       setMovimentacoes(prev => [...prev, novaMovimentacao]);
 
       // Salvar no localStorage
-      salvarDadosLocal(saldo, novaDespesa, economias, metaEconomias);
+      salvarDadosLocal(saldo, novaDespesa, economias, metaEconomias, [...movimentacoes, novaMovimentacao]);
 
       // Tentar salvar no banco de dados
       const { error } = await supabase
@@ -303,7 +344,7 @@ const Index = () => {
           categoria_id: '00000000-0000-0000-0000-000000000000',
           conta_id: '00000000-0000-0000-0000-000000000000',
           usuario_id: user.id,
-          observacao: descricaoDespesa || 'Despesa registrada'
+          observacao: tipoDespesa === 'adicionar' ? (descricaoDespesa || 'Despesa registrada') : (descricaoDespesa || 'Retirada de despesa')
         });
 
       if (error) {
@@ -312,8 +353,10 @@ const Index = () => {
       }
 
       toast({
-        title: "Despesa registrada!",
-        description: `${formatarEuro(valor)} registrado como despesa.`,
+        title: tipoDespesa === 'adicionar' ? "Despesa registrada!" : "Despesa retirada!",
+        description: tipoDespesa === 'adicionar' 
+          ? `${formatarEuro(valor)} registrado como despesa.`
+          : `${formatarEuro(valor)} retirado das despesas.`,
       });
 
       setValorDespesa('');
@@ -365,7 +408,7 @@ const Index = () => {
       setMovimentacoes(prev => [...prev, novaMovimentacao]);
 
       // Salvar no localStorage
-      salvarDadosLocal(saldo, despesas, novasEconomias, metaEconomias);
+      salvarDadosLocal(saldo, despesas, novasEconomias, metaEconomias, [...movimentacoes, novaMovimentacao]);
 
       // Tentar salvar no banco de dados
       const { error } = await supabase
@@ -417,7 +460,7 @@ const Index = () => {
     setMetaEconomias(novaMetaValor);
     
     // Salvar no localStorage
-    salvarDadosLocal(saldo, despesas, economias, novaMetaValor);
+    salvarDadosLocal(saldo, despesas, economias, novaMetaValor, movimentacoes);
     
     toast({
       title: "Meta atualizada!",
@@ -680,19 +723,42 @@ const Index = () => {
                 <DialogTrigger asChild>
                   <Button className="h-20 text-lg" variant="outline">
                     <TrendingDown className="mr-2" size={20} />
-                    Registrar Despesa
+                    Gerenciar Despesas
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Registrar Despesa</DialogTitle>
+                    <DialogTitle>Gerenciar Despesas</DialogTitle>
                     <DialogDescription>
-                      Digite o valor e descrição da despesa.
+                      Adicione ou retire despesas e defina uma descrição.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="valor-despesa">Valor (€)</Label>
+                      <Label>Tipo de Operação</Label>
+                      <div className="flex space-x-2 mt-2">
+                        <Button
+                          type="button"
+                          variant={tipoDespesa === 'adicionar' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setTipoDespesa('adicionar')}
+                        >
+                          Adicionar
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={tipoDespesa === 'retirar' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setTipoDespesa('retirar')}
+                        >
+                          Retirar
+                        </Button>
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="valor-despesa">
+                        Valor para {tipoDespesa === 'adicionar' ? 'Adicionar' : 'Retirar'} Despesa (€)
+                      </Label>
                       <Input
                         id="valor-despesa"
                         type="number"
@@ -716,7 +782,7 @@ const Index = () => {
                       Cancelar
                     </Button>
                     <Button onClick={handleAddDespesa}>
-                      Registrar Despesa
+                      {tipoDespesa === 'adicionar' ? 'Adicionar' : 'Retirar'} Despesa
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -811,6 +877,8 @@ const Index = () => {
                           mov.tipo === 'retirar-saldo' ? 'bg-red-500' :
                           mov.tipo === 'economias' ? 'bg-purple-500' : 
                           mov.tipo === 'retirar-economias' ? 'bg-orange-500' :
+                          mov.tipo === 'despesa' ? 'bg-red-500' :
+                          mov.tipo === 'retirar-despesa' ? 'bg-orange-500' :
                           'bg-red-500'
                         }`}></div>
                         <div>
@@ -825,9 +893,11 @@ const Index = () => {
                         mov.tipo === 'retirar-saldo' ? 'text-red-600' :
                         mov.tipo === 'economias' ? 'text-purple-600' : 
                         mov.tipo === 'retirar-economias' ? 'text-orange-600' :
+                        mov.tipo === 'despesa' ? 'text-red-600' :
+                        mov.tipo === 'retirar-despesa' ? 'text-orange-600' :
                         'text-red-600'
                       }`}>
-                        {mov.tipo === 'adicionar' || mov.tipo === 'economias' ? '+' : '-'} {formatarEuro(mov.valor)}
+                        {mov.tipo === 'adicionar' || mov.tipo === 'economias' || mov.tipo === 'despesa' ? '+' : '-'} {formatarEuro(mov.valor)}
                       </div>
                     </div>
                   </Card>
