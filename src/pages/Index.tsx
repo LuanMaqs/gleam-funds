@@ -6,11 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Wallet, TrendingUp, TrendingDown, DollarSign, LogOut, User, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Dados para o gráfico
+  const chartData = [
+    { name: 'Saldo Total', value: 2450, color: '#22c55e' },
+    { name: 'Despesas', value: 750, color: '#dc2626' },
+    { name: 'Economias', value: 1500, color: '#8b5cf6' },
+  ];
 
   useEffect(() => {
     const getUser = async () => {
@@ -91,7 +99,7 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-3">
           {/* Saldo Total */}
           <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
             <CardHeader className="pb-3">
@@ -103,20 +111,6 @@ const Index = () => {
             <CardContent>
               <div className="text-3xl font-bold text-primary">R$ 2.450,00</div>
               <p className="text-sm text-muted-foreground mt-1">+12% este mês</p>
-            </CardContent>
-          </Card>
-
-          {/* Receitas */}
-          <Card className="bg-gradient-to-r from-income/10 to-income/5 border-income/20">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center space-x-2">
-                <TrendingUp className="text-income" size={20} />
-                <span>Receitas</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-income">R$ 3.200,00</div>
-              <p className="text-sm text-muted-foreground mt-1">+8% este mês</p>
             </CardContent>
           </Card>
 
@@ -145,6 +139,45 @@ const Index = () => {
             <CardContent>
               <div className="text-3xl font-bold text-accent">R$ 1.500,00</div>
               <p className="text-sm text-muted-foreground mt-1">Meta: R$ 2.000</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Gráfico Financeiro */}
+        <div className="mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Visão Geral Financeira</CardTitle>
+              <CardDescription>
+                Distribuição do seu patrimônio financeiro
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Valor']}
+                      labelStyle={{ color: '#666' }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
         </div>
