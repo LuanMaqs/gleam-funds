@@ -14,7 +14,179 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      categorias: {
+        Row: {
+          cor: string
+          created_at: string
+          icone: string | null
+          id: string
+          nome: string
+          tipo: Database["public"]["Enums"]["category_type"]
+          usuario_id: string
+        }
+        Insert: {
+          cor: string
+          created_at?: string
+          icone?: string | null
+          id?: string
+          nome: string
+          tipo: Database["public"]["Enums"]["category_type"]
+          usuario_id: string
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          icone?: string | null
+          id?: string
+          nome?: string
+          tipo?: Database["public"]["Enums"]["category_type"]
+          usuario_id?: string
+        }
+        Relationships: []
+      }
+      contas: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          saldo_inicial: number | null
+          tipo: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          saldo_inicial?: number | null
+          tipo: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          saldo_inicial?: number | null
+          tipo?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
+      metas_financeiras: {
+        Row: {
+          categoria_id: string
+          created_at: string
+          id: string
+          mes_ano: string
+          usuario_id: string
+          valor_limite: number
+        }
+        Insert: {
+          categoria_id: string
+          created_at?: string
+          id?: string
+          mes_ano: string
+          usuario_id: string
+          valor_limite: number
+        }
+        Update: {
+          categoria_id?: string
+          created_at?: string
+          id?: string
+          mes_ano?: string
+          usuario_id?: string
+          valor_limite?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metas_financeiras_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          data_de_criacao: string
+          email: string
+          id: string
+          nome: string
+          user_id: string
+        }
+        Insert: {
+          data_de_criacao?: string
+          email: string
+          id?: string
+          nome: string
+          user_id: string
+        }
+        Update: {
+          data_de_criacao?: string
+          email?: string
+          id?: string
+          nome?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transacoes: {
+        Row: {
+          categoria_id: string
+          conta_id: string
+          created_at: string
+          data: string
+          frequencia: string | null
+          id: string
+          observacao: string | null
+          recorrente: boolean | null
+          tipo: Database["public"]["Enums"]["transaction_type"]
+          usuario_id: string
+          valor: number
+        }
+        Insert: {
+          categoria_id: string
+          conta_id: string
+          created_at?: string
+          data: string
+          frequencia?: string | null
+          id?: string
+          observacao?: string | null
+          recorrente?: boolean | null
+          tipo: Database["public"]["Enums"]["transaction_type"]
+          usuario_id: string
+          valor: number
+        }
+        Update: {
+          categoria_id?: string
+          conta_id?: string
+          created_at?: string
+          data?: string
+          frequencia?: string | null
+          id?: string
+          observacao?: string | null
+          recorrente?: boolean | null
+          tipo?: Database["public"]["Enums"]["transaction_type"]
+          usuario_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transacoes_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "contas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +195,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      category_type: "Receita" | "Despesa"
+      transaction_type: "Receita" | "Despesa"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +323,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      category_type: ["Receita", "Despesa"],
+      transaction_type: ["Receita", "Despesa"],
+    },
   },
 } as const
