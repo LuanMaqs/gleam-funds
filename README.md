@@ -1,73 +1,141 @@
-# Welcome to your Lovable project
+# MyWallet - Controle Financeiro Pessoal
 
-## Project info
+Um aplicativo moderno de controle financeiro pessoal construído com React, TypeScript, Tailwind CSS e Supabase.
 
-**URL**: https://lovable.dev/projects/23777a67-761a-4599-884b-af9b6c85e248
+## 🚀 Funcionalidades
 
-## How can I edit this code?
+- **Autenticação**: Sistema de login e cadastro com Supabase
+- **Dashboard**: Visão geral das finanças com cards informativos
+- **Design Responsivo**: Interface adaptável para desktop e mobile
+- **Tema Escuro/Claro**: Suporte a múltiplos temas
+- **UI Moderna**: Componentes shadcn/ui com design elegante
 
-There are several ways of editing your application.
+## 🛠️ Tecnologias
 
-**Use Lovable**
+- **React 18** - Biblioteca JavaScript para interfaces
+- **TypeScript** - Tipagem estática
+- **Vite** - Build tool e dev server
+- **Tailwind CSS** - Framework CSS utilitário
+- **shadcn/ui** - Componentes UI modernos
+- **Supabase** - Backend como serviço
+- **React Router** - Roteamento
+- **React Query** - Gerenciamento de estado do servidor
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/23777a67-761a-4599-884b-af9b6c85e248) and start prompting.
+## 📦 Instalação
 
-Changes made via Lovable will be committed automatically to this repo.
+1. **Clone o repositório**
+   ```bash
+   git clone <url-do-repositorio>
+   cd gleam-funds
+   ```
 
-**Use your preferred IDE**
+2. **Instale as dependências**
+   ```bash
+   npm install
+   ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+3. **Configure as variáveis de ambiente**
+   Crie um arquivo `.env.local` na raiz do projeto:
+   ```env
+   VITE_SUPABASE_URL=sua_url_do_supabase
+   VITE_SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
+   ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+4. **Inicie o servidor de desenvolvimento**
+   ```bash
+   npm run dev
+   ```
 
-Follow these steps:
+5. **Acesse o aplicativo**
+   Abra [http://localhost:8080](http://localhost:8080) no seu navegador
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 🏗️ Estrutura do Projeto
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+src/
+├── components/          # Componentes reutilizáveis
+│   └── ui/            # Componentes shadcn/ui
+├── hooks/             # Hooks customizados
+├── integrations/      # Integrações externas
+│   └── supabase/     # Configuração do Supabase
+├── pages/            # Páginas da aplicação
+├── types/            # Definições de tipos TypeScript
+└── lib/              # Utilitários e configurações
 ```
 
-**Edit a file directly in GitHub**
+## 🎨 Design System
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+O projeto utiliza um sistema de design financeiro personalizado com:
 
-**Use GitHub Codespaces**
+- **Cores Primárias**: Verde financeiro (#22c55e)
+- **Cores de Status**: 
+  - Receitas: Verde (#16a34a)
+  - Despesas: Vermelho (#dc2626)
+  - Avisos: Amarelo (#ca8a04)
+- **Gradientes**: Efeitos visuais elegantes
+- **Sombras**: Sistema de elevação consistente
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🔧 Scripts Disponíveis
 
-## What technologies are used for this project?
+- `npm run dev` - Inicia o servidor de desenvolvimento
+- `npm run build` - Gera build de produção
+- `npm run preview` - Visualiza o build de produção
+- `npm run lint` - Executa o linter
 
-This project is built with:
+## 🚀 Deploy
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Vercel (Recomendado)
+1. Conecte seu repositório ao Vercel
+2. Configure as variáveis de ambiente
+3. Deploy automático a cada push
 
-## How can I deploy this project?
+### Netlify
+1. Build command: `npm run build`
+2. Publish directory: `dist`
+3. Configure as variáveis de ambiente
 
-Simply open [Lovable](https://lovable.dev/projects/23777a67-761a-4599-884b-af9b6c85e248) and click on Share -> Publish.
+## 📱 Responsividade
 
-## Can I connect a custom domain to my Lovable project?
+O aplicativo é totalmente responsivo e funciona em:
+- 📱 Mobile (320px+)
+- 📱 Tablet (768px+)
+- 💻 Desktop (1024px+)
+- 🖥️ Large Desktop (1440px+)
 
-Yes, you can!
+## 🔐 Autenticação
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+O sistema de autenticação utiliza Supabase Auth com:
+- Login com email/senha
+- Cadastro de novos usuários
+- Recuperação de senha
+- Sessões persistentes
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 🎯 Próximas Funcionalidades
+
+- [ ] Adicionar transações
+- [ ] Categorização de despesas
+- [ ] Relatórios e gráficos
+- [ ] Metas financeiras
+- [ ] Exportação de dados
+- [ ] Notificações
+- [ ] Backup automático
+
+## 🤝 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+
+## 📞 Suporte
+
+Se você encontrar algum problema ou tiver dúvidas, abra uma issue no repositório.
+
+---
+
+**Desenvolvido com ❤️ para controle financeiro pessoal**
